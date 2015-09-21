@@ -105,7 +105,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     Set myPart = swApp.OpenDoc6(tempDir + "\" + modelName, swDocPART, swOpenDocOptions_Silent, "", errors, warnings)
 
     Set myExtension = myPart.Extension
-    
+
     boolstatus = myExtension.SaveAs(vendorDir + "\" + myPart.GetTitle + " " + checkInDocument.Revision + ".igs", 0, 0, Nothing, errors, warnings)
 
 
@@ -123,7 +123,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
 
     swApp.QuitDoc myPart.GetTitle
     swApp.QuitDoc myDrawing.GetTitle
-    
+
     fso.DeleteFile (tempDir + "\" + modelnumber(j) + ".SLDDRW")
     fso.DeleteFile (tempDir + "\" + modelnumber(j) + ".SLDPRT")
 
@@ -162,55 +162,55 @@ For i = 0 To UBound(vSheetName)
 
     boolstatus = myDrawing.ActivateSheet(vSheetName(i))
     Set myView = myDrawing.GetFirstView
-    
+
     While Not myView Is Nothing
-    
+
         Set myNote = myView.GetFirstNote
-        
+
         While Not myNote Is Nothing
-            
+
             regEx.Pattern = "THIS PART DOES NOT USE A CUT FILE"
-            
+
             If regEx.Test(myNote.GetText) Then
-                
+
                 Set myNote = myNote.GetNext
                 myModel.ClearSelection2 (True)
                 boolstatus = myExtension.SelectByID2("CUT", "SHEET", 0, 0, 0, False, 0, Nothing, 0)
                 boolstatus = myExtension.DeleteSelection2(0)
                 vSheetName(i) = "DELETED"
-                
+
             Else
-            
+
                 regEx.Pattern = "dxf for cut file|this sheet intentionally left blank"
-            
+
                 If regEx.Test(myNote.GetText) Then
-                
+
                     noteName = myNote.GetName + "@" + myView.GetName2
-                
+
                     Set myNote = myNote.GetNext
-                
+
                     myModel.ClearSelection2 (True)
                     boolstatus = myExtension.SelectByID2(noteName, "NOTE", 0, 0, 0, False, 0, Nothing, 0)
                     myModel.EditDelete
-                
+
                 Else
                     Set myNote = myNote.GetNext
                 End If
             End If
-            
+
         Wend
-        
-        
+
+
         Set myView = myView.GetNextView
-        
+
     Wend
-    
+
     regEx.Pattern = "cut"
-    
+
     myDrawing.ActivateSheet (vSheetName(i))
-    
+
     Set mySheet = myDrawing.Sheet(vSheetName(i))
-    
+
     If regEx.Test(vSheetName(i)) Then
         If vSheetName(i) <> "DELETED" Then
             boolstatus = myDrawing.SetupSheet5(vSheetName(i), 0, 13, mySheet.GetProperties(2), mySheet.GetProperties(3), False, None, 0#, 0#, "Default", True)
@@ -222,7 +222,7 @@ For i = 0 To UBound(vSheetName)
             boolstatus = myDrawing.SetupSheet5(vSheetName(i), 0, 12, mySheet.GetProperties(2), mySheet.GetProperties(3), False, "X:\Engineering\Engineering Resources\SolidWorks Templates\Current Templates\DRAWING (IMPERIAL).slddrt", 0#, 0#, "Default", True)
         End If
     End If
-    
+
 Next i
 
 End Sub
@@ -239,9 +239,9 @@ Do Until EOF(1)
     ReDim Preserve modelnumber(k)
     Line Input #1, modelnumber(k)
     'Debug.Print modelnumber(k)
-    
+
     k = k + 1
-    
+
 Loop
 Close #1
 
