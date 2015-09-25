@@ -1,26 +1,21 @@
 Dim swApp           As SldWorks.SldWorks
 Dim myModel         As SldWorks.ModelDoc2
+Dim myExtension     As SldWorks.ModelDocExtension
 Dim myPart          As SldWorks.ModelDoc2
 Dim myDrawing       As SldWorks.DrawingDoc
+Dim mySheet         As SldWorks.Sheet
 Dim myView          As SldWorks.View
 Dim myNote          As SldWorks.Note
-Dim myExtension     As SldWorks.ModelDocExtension
 Dim myExportPDFData As SldWorks.ExportPdfData
 Dim myCustPropMgr   As SldWorks.CustomPropertyManager
-Dim mySheet         As SldWorks.Sheet
-
 Dim fso             As Object
-
 Dim PDMConnection   As IPDMWConnection
 Dim documents       As IPDMWDocuments
 Dim checkInDocument As PDMWDocument
 Dim myPDMPart       As PDMWDocument
 Dim myPDMDrawing    As PDMWDocument
-
 Dim drawingName     As String
 Dim modelName       As String
-Dim vendorDir       As String
-Dim tempDir         As String
 Dim Revision        As String
 Dim PDMRevision     As String
 Dim evalRev         As String
@@ -28,26 +23,26 @@ Dim revMessage      As String
 Dim errors          As Long
 Dim warnings        As Long
 Dim boolstatus      As Boolean
-
 Dim modelnumber()   As String
 Dim j               As Integer
 
+Sub main()'--------------------------------------------------------------------'
 
-Sub main()
+Const vendorDir     As String = "X:\Engineering\Vendor Files"
+Const tempDir       As String = "X:\Engineering\TEMP"
+Const pdmName       As String = "jpettit"
+Const pdmLogin      As String = "CDGshoxs!"
+Const pdmServer     As string = "SHOXS1"
 
+'function call which returns via a global variable. should change this'
 readdata
-
-'vendor files and temp locations on x drive
-vendorDir = "X:\Engineering\Vendor Files"
-tempDir = "X:\Engineering\TEMP"
-pdmdir = "C:\Users\jpettit\Documents\PDM Documents"
 
 Set fso = CreateObject("scripting.filesystemobject")
 Set PDMConnection = CreateObject("PDMWorks.PDMWConnection")
 Set swApp = Application.SldWorks
 
 'initialize the pdmworks connection
-PDMConnection.Login "jpettit", "CDGshoxs!", "SHOXS1"
+PDMConnection.Login pdmName, pdmLogin, pdmName
 
 For j = LBound(modelnumber) To UBound(modelnumber)
 
@@ -58,18 +53,24 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     Set myPDMPart = PDMConnection.GetSpecificDocument(modelName)
     Set myPDMDrawing = PDMConnection.GetSpecificDocument(drawingName)
 
-
-    If myPDMPart.Owner <> "jpettit" Then
+    If myPDMPart.Owner <> pdmName Then
         myPDMPart.TakeOwnership
     End If
-    If myPDMDrawing.Owner <> "jpettit" Then
+
+    If myPDMDrawing.Owner <> pdmName Then
         myPDMDrawing.TakeOwnership
     End If
 
     myPDMDrawing.Save (tempDir)
     myPDMPart.Save (tempDir)
 
-    Set myPart = swApp.OpenDoc6(tempDir + "\" + modelName, swDocPART, swOpenDocOptions_Silent, "", errors, warnings)
+    Set myPart = swApp.OpenDoc6(tempDir + "\" + modelName, _
+        swDocPART, _
+        swOpenDocOptions_Silent, _
+        "", _
+        errors, _
+        warnings)
+
     'do stuff with model here
     Set myExtension = myPart.Extension
     Set myCustPropMgr = myExtension.CustomPropertyManager("")
@@ -89,7 +90,13 @@ For j = LBound(modelnumber) To UBound(modelnumber)
 
     boolstatus = myPart.Save3(1, errors, warnings)
 
-    Set myDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, swDocDRAWING, swOpenDocOptions_Silent, "", errors, warnings)
+    Set myDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, _
+        swDocDRAWING, _
+        swOpenDocOptions_Silent, _
+        "", _
+        errors, _
+        warnings)
+
     'pass an active drawing
 
     changeActiveDrawingSheet
@@ -99,26 +106,66 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     swApp.QuitDoc myDrawing.GetTitle
     swApp.QuitDoc myPart.GetTitle
 
-    Set checkInDocument = PDMConnection.CheckIn(tempDir + "\" + drawingName, myPDMDrawing.project, myPDMDrawing.Number, myPDMDrawing.Description, "", Default, "", myPDMDrawing.GetStatus, False, "")
-    Set checkInDocument = PDMConnection.CheckIn(tempDir + "\" + modelName, myPDMPart.project, myPDMPart.Number, myPDMPart.Description, "", Default, "", myPDMPart.GetStatus, False, "")
+    Set checkInDocument = PDMConnection.CheckIn(
+        tempDir + "\" + drawingName, _
+        myPDMDrawing.project, _
+        myPDMDrawing.Number, _
+        myPDMDrawing.Description, _
+        "", _
+        Default, _
+        "", _
+        myPDMDrawing.GetStatus, _
+        False, _
+        "")
+    Set checkInDocument = PDMConnection.CheckIn(
+        tempDir + "\" + modelName, _
+        myPDMPart.project, _
+        myPDMPart.Number, _
+        myPDMPart.Description, _
+        "", _
+        Default, _
+        "", _
+        myPDMPart.GetStatus, _
+        False, _
+        "")
 
-    Set myPart = swApp.OpenDoc6(tempDir + "\" + modelName, swDocPART, swOpenDocOptions_Silent, "", errors, warnings)
-
+    Set myPart = swApp.OpenDoc6(tempDir + "\" + modelName, _
+        swDocPART, _
+        swOpenDocOptions_Silent, _
+        "", _
+        errors, _
+        warnings)
     Set myExtension = myPart.Extension
 
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".igs", 0, 0, Nothing, errors, warnings)
+    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".igs", _
+        0, _
+        0, _
+        Nothing, _
+        errors, _
+        warnings)
 
-
-    Set myDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, swDocDRAWING, swOpenDocOptions_Silent, "", errors, warnings)
-
+    Set myDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, swDocDRAWING, swOpenDocOptions_Silent, _
+        "", _
+        errors, _
+        warnings)
     Set myExtension = myDrawing.Extension
     Set myExportPDFData = swApp.GetExportFileData(1)
 
     boolstatus = myExportPDFData.SetSheets(1, Nothing)
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".pdf", 0, 0, myExportPDFData, errors, warnings)
+    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".pdf", _
+    0, _
+    0, _
+    myExportPDFData, _
+    errors, _
+    warnings)
 
     If myDrawing.ActivateSheet("CUT") Then
-        boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".dxf", 0, 0, Nothing, errors, warnings)
+        boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".dxf", _
+        0, _
+        0, _
+        Nothing, _
+        errors, _
+        warnings)
     End If
 
     swApp.QuitDoc myPart.GetTitle
@@ -135,7 +182,7 @@ PDMConnection.Logout
 
 End Sub
 
-Sub changeActiveDrawingSheet()
+Sub changeActiveDrawingSheet()'------------------------------------------------'
 
 Dim regEx As New RegExp
 
@@ -145,10 +192,16 @@ Dim vSheetName As Variant
 Dim noteName As String
 Dim i As Integer
 
+Const cutTemplate      As String = _
+    "X:\Engineering\Engineering Resources\SolidWorks Templates"_
+    "\Current Templates\DRAWING (IMPERIAL) CUT.slddrt"
+Const defaultTemplate  As String = _
+    "X:\Engineering\Engineering Resources\SolidWorks Templates"_
+    "\Current Templates\DRAWING (IMPERIAL).slddrt"
+
 Set myModel = swApp.ActiveDoc
 Set myExtension = myModel.Extension
 Set myDrawing = myModel
-
 
 With regEx
             .Global = True
@@ -159,92 +212,125 @@ End With
 vSheetName = myDrawing.GetSheetNames
 
 For i = 0 To UBound(vSheetName)
-
     boolstatus = myDrawing.ActivateSheet(vSheetName(i))
     Set myView = myDrawing.GetFirstView
-
     While Not myView Is Nothing
-
         Set myNote = myView.GetFirstNote
-
         While Not myNote Is Nothing
-
             regEx.Pattern = "THIS PART DOES NOT USE A CUT FILE"
-
             If regEx.Test(myNote.GetText) Then
-
                 Set myNote = myNote.GetNext
                 myModel.ClearSelection2 (True)
-                boolstatus = myExtension.SelectByID2("CUT", "SHEET", 0, 0, 0, False, 0, Nothing, 0)
+                boolstatus = myExtension.SelectByID2("CUT", _
+                    "SHEET", _
+                    0, _
+                    0, _
+                    0, _
+                    False, _
+                    0, _
+                    Nothing, _
+                    0)
                 boolstatus = myExtension.DeleteSelection2(0)
                 vSheetName(i) = "DELETED"
-
             Else
-
-                regEx.Pattern = "dxf for cut file|this sheet intentionally left blank"
-
+                regEx.Pattern = "dxf for cut file|" _
+                    "this sheet intentionally left blank"
                 If regEx.Test(myNote.GetText) Then
-
                     noteName = myNote.GetName + "@" + myView.GetName2
-
                     Set myNote = myNote.GetNext
-
                     myModel.ClearSelection2 (True)
-                    boolstatus = myExtension.SelectByID2(noteName, "NOTE", 0, 0, 0, False, 0, Nothing, 0)
+                    boolstatus = myExtension.SelectByID2(noteName, _
+                        "NOTE", _
+                        0, _
+                        0, _
+                        0, _
+                        False, _
+                        0, _
+                        Nothing, _
+                        0)
                     myModel.EditDelete
-
                 Else
                     Set myNote = myNote.GetNext
                 End If
             End If
-
         Wend
-
-
         Set myView = myView.GetNextView
-
     Wend
 
     regEx.Pattern = "cut"
-
     myDrawing.ActivateSheet (vSheetName(i))
-
     Set mySheet = myDrawing.Sheet(vSheetName(i))
 
     If regEx.Test(vSheetName(i)) Then
         If vSheetName(i) <> "DELETED" Then
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), 0, 13, mySheet.GetProperties(2), mySheet.GetProperties(3), False, None, 0#, 0#, "Default", True)
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), 0, 12, mySheet.GetProperties(2), mySheet.GetProperties(3), False, "X:\Engineering\Engineering Resources\SolidWorks Templates\Current Templates\DRAWING (IMPERIAL) CUT.slddrt", 0#, 0#, "Default", True)
+            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+                0, _
+                13, _
+                mySheet.GetProperties(2), _
+                mySheet.GetProperties(3), _
+                False, _
+                None, _
+                0#, _
+                0#, _
+                "Default", _
+                True)
+            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+                0, _
+                12, _
+                mySheet.GetProperties(2), _
+                mySheet.GetProperties(3), _
+                False, _
+                cutTemplate, _
+                0#, _
+                0#, _
+                "Default", _
+                True)
         End If
     Else
         If vSheetName(i) <> "DELETED" Then
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), 0, 13, mySheet.GetProperties(2), mySheet.GetProperties(3), False, None, 0#, 0#, "Default", True)
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), 0, 12, mySheet.GetProperties(2), mySheet.GetProperties(3), False, "X:\Engineering\Engineering Resources\SolidWorks Templates\Current Templates\DRAWING (IMPERIAL).slddrt", 0#, 0#, "Default", True)
+            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+                0, _
+                13, _
+                mySheet.GetProperties(2), _
+                mySheet.GetProperties(3), _
+                False, _
+                None, _
+                0#, _
+                0#, _
+                "Default", _
+                True)
+            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+                0, _
+                12, _
+                mySheet.GetProperties(2), _
+                mySheet.GetProperties(3), _
+                False, _
+                defaultTemplate, _
+                0#, _
+                0#, _
+                "Default", _
+                True)
         End If
     End If
-
 Next i
-
 End Sub
 
-Sub readdata()
-
-Dim k As Integer
-
+Sub readdata()'----------------------------------------------------------------'
+'this function currently just changes a global variable modelnumber
+'should refactor as a function with a return value
 Open "C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt" For Input As #1
 
-k = 0
+'declare the local loop variable'
+Dim k As Integer = 0
+Dim records As Integer
 
 Do Until EOF(1)
     ReDim Preserve modelnumber(k)
     Line Input #1, modelnumber(k)
-    'Debug.Print modelnumber(k)
-
     k = k + 1
-
 Loop
 Close #1
 
-Debug.Print UBound(modelnumber()) + 1 & " PARTS TO CHANGE"
-
+records = UBound(modelnumber()) + 1
+Debug.Print records & " PARTS TO CHANGE"
 End Sub
