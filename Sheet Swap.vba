@@ -106,7 +106,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
 
     Set myExtension = myPart.Extension
 
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + myPart.GetTitle + " " + checkInDocument.Revision + ".igs", 0, 0, Nothing, errors, warnings)
+    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".igs", 0, 0, Nothing, errors, warnings)
 
 
     Set myDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, swDocDRAWING, swOpenDocOptions_Silent, "", errors, warnings)
@@ -115,10 +115,10 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     Set myExportPDFData = swApp.GetExportFileData(1)
 
     boolstatus = myExportPDFData.SetSheets(1, Nothing)
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + myPart.GetTitle + " " + checkInDocument.Revision + ".pdf", 0, 0, myExportPDFData, errors, warnings)
+    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".pdf", 0, 0, myExportPDFData, errors, warnings)
 
     If myDrawing.ActivateSheet("CUT") Then
-        boolstatus = myExtension.SaveAs(vendorDir + "\" + myPart.GetTitle + " " + checkInDocument.Revision + ".dxf", 0, 0, Nothing, errors, warnings)
+        boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".dxf", 0, 0, Nothing, errors, warnings)
     End If
 
     swApp.QuitDoc myPart.GetTitle

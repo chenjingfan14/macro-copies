@@ -42,8 +42,8 @@ Set swModel = swApp.ActiveDoc
 Set swCustPropMgr = swModel.Extension.CustomPropertyManager("")
 
 'determine the names of the files in pdmworks by examining the active document name
-drawingName = swModel.GetTitle + ".SLDDRW"
-modelName = swModel.GetTitle + ".SLDPRT"
+drawingName = Left(swModel.GetTitle, 6) + ".SLDDRW"
+modelName = Left(swModel.GetTitle, 6) + ".SLDPRT"
 
 'initialize the pdmworks connection
 PDMConnection.Login "jpettit", "CDGshoxs!", "SHOXS1"
@@ -61,7 +61,7 @@ If PDMRevision <> Revision Then
 End If
 
 'save the active document (part) as an IGES file
-swModel.SaveAs (vendorDir + "\" + swModel.GetTitle + " " + Revision + ".igs")
+swModel.SaveAs (vendorDir + "\" + Left(swModel.GetTitle, 6) + " " + Revision + ".IGS")
 
 'open the drawing and save as PDF
 Set swDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, swDocDRAWING, swOpenDocOptions_Silent, "", errors, warnings)
@@ -69,16 +69,16 @@ Set swModelDocExt = swDrawing.Extension
 Set swExportPDFData = swApp.GetExportFileData(1)
 
 boolstatus = swExportPDFData.SetSheets(1, Nothing)
-boolstatus = swModelDocExt.SaveAs(vendorDir + "\" + swModel.GetTitle + " " + Revision + ".pdf", 0, 0, swExportPDFData, errors, warnings)
+boolstatus = swModelDocExt.SaveAs(vendorDir + "\" + Left(swModel.GetTitle, 6) + " " + Revision + ".PDF", 0, 0, swExportPDFData, errors, warnings)
 
 'if any drawing sheets are named CUT, switch to that sheet and save as a dxf
 If swDrawing.ActivateSheet("CUT") Then
-   boolstatus = swModelDocExt.SaveAs(vendorDir + "\" + swModel.GetTitle + " " + Revision + ".dxf", 0, 0, Nothing, errors, warnings)
+   boolstatus = swModelDocExt.SaveAs(vendorDir + "\" + Left(swModel.GetTitle, 6) + " " + Revision + ".DXF", 0, 0, Nothing, errors, warnings)
 End If
 
 'cleanup - close the drawing, and delete if from vendor files. close the pdm conneciton
 swApp.QuitDoc swDrawing.GetTitle
-fso.DeleteFile (tempDir + "\" + swModel.GetTitle + ".SLDDRW")
+fso.DeleteFile (tempDir + "\" + Left(swModel.GetTitle, 6) + ".SLDDRW")
 PDMConnection.Logout
 
 End Sub
