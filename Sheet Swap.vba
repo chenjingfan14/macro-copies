@@ -28,13 +28,13 @@ Dim boolstatus      As Boolean
 Dim modelnumber()   As String
 Dim j               As Integer
 
-Sub main()'--------------------------------------------------------------------'
+Sub main() '--------------------------------------------------------------------'
 
 Const vendorDir     As String = "X:\Engineering\Vendor Files"
 Const tempDir       As String = "X:\Engineering\TEMP"
 Const pdmName       As String = "jpettit"
 Const pdmLogin      As String = "CDGshoxs!"
-Const pdmServer     As string = "SHOXS1"
+Const pdmServer     As String = "SHOXS1"
 
 'function call which returns via a global variable. should change this'
 modelnumber() = readdata("C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt")
@@ -44,7 +44,7 @@ Set PDMConnection = CreateObject("PDMWorks.PDMWConnection")
 Set swApp = Application.SldWorks
 
 'initialize the pdmworks connection
-PDMConnection.Login pdmName, pdmLogin, pdmName
+PDMConnection.Login pdmName, pdmLogin, pdmServer
 
 For j = LBound(modelnumber) To UBound(modelnumber)
 
@@ -108,7 +108,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     swApp.QuitDoc myDrawing.GetTitle
     swApp.QuitDoc myPart.GetTitle
 
-    Set checkInDocument = PDMConnection.CheckIn(
+    Set checkInDocument = PDMConnection.CheckIn( _
         tempDir + "\" + drawingName, _
         myPDMDrawing.project, _
         myPDMDrawing.Number, _
@@ -119,7 +119,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         myPDMDrawing.GetStatus, _
         False, _
         "")
-    Set checkInDocument = PDMConnection.CheckIn(
+    Set checkInDocument = PDMConnection.CheckIn( _
         tempDir + "\" + modelName, _
         myPDMPart.project, _
         myPDMPart.Number, _
@@ -139,7 +139,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         warnings)
     Set myExtension = myPart.Extension
 
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".igs", _
+    boolstatus = myExtension.SaveAs(vendorDir + "\" + Left(myPart.GetTitle, 6) + " " + checkInDocument.Revision + ".igs", _
         0, _
         0, _
         Nothing, _
@@ -154,7 +154,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     Set myExportPDFData = swApp.GetExportFileData(1)
 
     boolstatus = myExportPDFData.SetSheets(1, Nothing)
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".pdf", _
+    boolstatus = myExtension.SaveAs(vendorDir + "\" + Left(myPart.GetTitle, 6) + " " + checkInDocument.Revision + ".pdf", _
     0, _
     0, _
     myExportPDFData, _
@@ -162,7 +162,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     warnings)
 
     If myDrawing.ActivateSheet("CUT") Then
-        boolstatus = myExtension.SaveAs(vendorDir + "\" + left(myPart.GetTitle,6) + " " + checkInDocument.Revision + ".dxf", _
+        boolstatus = myExtension.SaveAs(vendorDir + "\" + Left(myPart.GetTitle, 6) + " " + checkInDocument.Revision + ".dxf", _
         0, _
         0, _
         Nothing, _
@@ -184,7 +184,7 @@ PDMConnection.Logout
 
 End Sub
 
-Sub changeActiveDrawingSheet()'------------------------------------------------'
+Sub changeActiveDrawingSheet() '------------------------------------------------'
 
 Dim regEx As New RegExp
 
@@ -195,10 +195,10 @@ Dim noteName As String
 Dim i As Integer
 
 Const cutTemplate      As String = _
-    "X:\Engineering\Engineering Resources\SolidWorks Templates"_
+    "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
     "\Current Templates\DRAWING (IMPERIAL) CUT.slddrt"
 Const defaultTemplate  As String = _
-    "X:\Engineering\Engineering Resources\SolidWorks Templates"_
+    "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
     "\Current Templates\DRAWING (IMPERIAL).slddrt"
 
 Set myModel = swApp.ActiveDoc
@@ -235,7 +235,7 @@ For i = 0 To UBound(vSheetName)
                 boolstatus = myExtension.DeleteSelection2(0)
                 vSheetName(i) = "DELETED"
             Else
-                regEx.Pattern = "dxf for cut file|" _
+                regEx.Pattern = "dxf for cut file|" + _
                     "this sheet intentionally left blank"
                 If regEx.Test(myNote.GetText) Then
                     noteName = myNote.GetName + "@" + myView.GetName2
@@ -317,12 +317,12 @@ For i = 0 To UBound(vSheetName)
 Next i
 End Sub
 
-Function readdata(filepath as String) as string()'-----------------------------'
+Function readdata(filepath As String) As String() '-----------------------------'
 
 Open filepath For Input As #1
 
 'declare the local loop variable'
-Dim k As Integer = 0
+Dim k As Integer
 Dim records() As String
 
 Do Until EOF(1)
@@ -334,6 +334,6 @@ Close #1
 
 Debug.Print UBound(records()) + 1 & " PARTS TO CHANGE"
 
-readdata() = records()
+readdata = records()
 
 End Function
