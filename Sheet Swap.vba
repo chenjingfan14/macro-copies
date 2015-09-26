@@ -148,50 +148,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         False, _
         "")
 
-    Set myPart = swApp.OpenDoc6(tempDir + "\" + modelName, _
-        swDocPART, _
-        swOpenDocOptions_Silent, _
-        "", _
-        errors, _
-        warnings)
-    Set myExtension = myPart.Extension
-
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + Left(myPart.GetTitle, 6) + " " + checkInDocument.Revision + ".igs", _
-        0, _
-        0, _
-        Nothing, _
-        errors, _
-        warnings)
-
-    Set myDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, swDocDRAWING, swOpenDocOptions_Silent, _
-        "", _
-        errors, _
-        warnings)
-    Set myExtension = myDrawing.Extension
-    Set myExportPDFData = swApp.GetExportFileData(1)
-
-    boolstatus = myExportPDFData.SetSheets(1, Nothing)
-    boolstatus = myExtension.SaveAs(vendorDir + "\" + Left(myPart.GetTitle, 6) + " " + checkInDocument.Revision + ".pdf", _
-    0, _
-    0, _
-    myExportPDFData, _
-    errors, _
-    warnings)
-
-    If myDrawing.ActivateSheet("CUT") Then
-        boolstatus = myExtension.SaveAs(vendorDir + "\" + Left(myPart.GetTitle, 6) + " " + checkInDocument.Revision + ".dxf", _
-        0, _
-        0, _
-        Nothing, _
-        errors, _
-        warnings)
-    End If
-
-    swApp.QuitDoc myPart.GetTitle
-    swApp.QuitDoc myDrawing.GetTitle
-
-    fso.DeleteFile (tempDir + "\" + modelnumber(j) + ".SLDDRW")
-    fso.DeleteFile (tempDir + "\" + modelnumber(j) + ".SLDPRT")
+    errors = saveVendorFiles(modelnumber(j),PDMConnection)
 
     Debug.Print modelnumber(j) + " FINISHED"
 
