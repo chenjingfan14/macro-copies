@@ -12,7 +12,6 @@ Dim myExportPDFData As SldWorks.ExportPdfData
 Dim myCustPropMgr   As SldWorks.CustomPropertyManager
 Dim fso             As Object
 Dim PDMConnection   As IPDMWConnection
-Dim documents       As IPDMWDocuments
 Dim checkInDocument As PDMWDocument
 Dim myPDMPart       As PDMWDocument
 Dim myPDMDrawing    As PDMWDocument
@@ -26,22 +25,40 @@ Dim errors          As Long
 Dim warnings        As Long
 Dim boolstatus      As Boolean
 Dim modelnumber()   As String
-Dim j               As Integer
 
 Sub main() '--------------------------------------------------------------------'
 
+Dim CP_Finish       As String
+Dim CP_Change       As String
+Dim CP_ChangeDate   As String
+Dim CP_DrawnBy      As String
+Dim CP_DrawnDate    As String
+Dim CP_Material     As String
+
+Dim j               As Integer
+
+Const inputFile     As String = "C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt"
 Const vendorDir     As String = "X:\Engineering\Vendor Files"
 Const tempDir       As String = "X:\Engineering\TEMP"
 Const pdmName       As String = "jpettit"
 Const pdmLogin      As String = "CDGshoxs!"
 Const pdmServer     As String = "SHOXS1"
 
-'function call which returns via a global variable. should change this'
-modelnumber() = readdata("C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt")
+'Custom property values to be written to each file'
+CP_Finish = "002"
+CP_Change = "CHANGED FINISH SPECIFICATION"
+CP_ChangeDate = Format(Now, "d-MMM-yy")
+CP_DrawnBy = "JP"
+CP_DrawnDate = Format(Now, "mm/d/yy")
+CP_Material = "6061-T6 ALLOY"
 
 Set fso = CreateObject("scripting.filesystemobject")
 Set PDMConnection = CreateObject("PDMWorks.PDMWConnection")
 Set swApp = Application.SldWorks
+
+'function call which returns array of part numbers to change'
+modelnumber() = readData(inputFile)
+Debug.Print UBound(modelnumber()) + 1 & " PARTS TO CHANGE"
 
 'initialize the pdmworks connection
 PDMConnection.Login pdmName, pdmLogin, pdmServer
@@ -83,12 +100,12 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     boolstatus = myCustPropMgr.Add2("DrawnBy", swCustomInfoType_e.swCustomInfoText, " ")
     boolstatus = myCustPropMgr.Add2("DrawnDate", swCustomInfoType_e.swCustomInfoText, " ")
 
-    boolstatus = myCustPropMgr.Set("Finish", "002")
-    boolstatus = myCustPropMgr.Set("Description of Change", "CHANGED FINISH SPECIFICATION")
-    boolstatus = myCustPropMgr.Set("Date of Change", "16-SEP-15")
-    boolstatus = myCustPropMgr.Set("DrawnBy", "JP")
-    boolstatus = myCustPropMgr.Set("DrawnDate", "09/16/15")
-    boolstatus = myCustPropMgr.Set("Material", "6061-T6 ALLOY")
+    boolstatus = myCustPropMgr.Set("Finish", CP_Finish)
+    boolstatus = myCustPropMgr.Set("Description of Change", CP_Change)
+    boolstatus = myCustPropMgr.Set("Date of Change", CP_ChangeDate)
+    boolstatus = myCustPropMgr.Set("DrawnBy", CP_DrawnBy)
+    boolstatus = myCustPropMgr.Set("DrawnDate", CP_DrawnDate)
+    boolstatus = myCustPropMgr.Set("Material", CP_Material)
 
     boolstatus = myPart.Save3(1, errors, warnings)
 
@@ -317,11 +334,10 @@ For i = 0 To UBound(vSheetName)
 Next i
 End Sub
 
-Function readdata(filepath As String) As String() '-----------------------------'
+Private Function readData(filepath As String) As String()
 
 Open filepath For Input As #1
 
-'declare the local loop variable'
 Dim k As Integer
 Dim records() As String
 
@@ -330,10 +346,7 @@ Do Until EOF(1)
     Line Input #1, records(k)
     k = k + 1
 Loop
+
 Close #1
-
-Debug.Print UBound(records()) + 1 & " PARTS TO CHANGE"
-
-readdata = records()
-
+readData = records()
 End Function
