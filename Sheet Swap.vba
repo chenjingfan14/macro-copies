@@ -1,3 +1,5 @@
+Option Explicit
+
 Dim swApp           As SldWorks.SldWorks
 Dim myModel         As SldWorks.ModelDoc2
 Dim myExtension     As SldWorks.ModelDocExtension
@@ -35,7 +37,7 @@ Const pdmLogin      As String = "CDGshoxs!"
 Const pdmServer     As string = "SHOXS1"
 
 'function call which returns via a global variable. should change this'
-readdata
+modelnumber() = readdata("C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt")
 
 Set fso = CreateObject("scripting.filesystemobject")
 Set PDMConnection = CreateObject("PDMWorks.PDMWConnection")
@@ -315,22 +317,23 @@ For i = 0 To UBound(vSheetName)
 Next i
 End Sub
 
-Sub readdata()'----------------------------------------------------------------'
-'this function currently just changes a global variable modelnumber
-'should refactor as a function with a return value
-Open "C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt" For Input As #1
+Function readdata(filepath as String) as string()'-----------------------------'
+
+Open filepath For Input As #1
 
 'declare the local loop variable'
 Dim k As Integer = 0
-Dim records As Integer
+Dim records() As String
 
 Do Until EOF(1)
-    ReDim Preserve modelnumber(k)
-    Line Input #1, modelnumber(k)
+    ReDim Preserve records(k)
+    Line Input #1, records(k)
     k = k + 1
 Loop
 Close #1
 
-records = UBound(modelnumber()) + 1
-Debug.Print records & " PARTS TO CHANGE"
-End Sub
+Debug.Print UBound(records()) + 1 & " PARTS TO CHANGE"
+
+readdata() = records()
+
+End Function
