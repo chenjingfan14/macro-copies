@@ -1,7 +1,7 @@
 Option Explicit
 Dim swApp As SldWorks.SldWorks
 '------------------------------------------------------------------------------'
-Sub main()
+Sub VendorFilesForCurrentDocument()
 
 'object declarations
 Dim swModel         As SldWorks.ModelDoc2

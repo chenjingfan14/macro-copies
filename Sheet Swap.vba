@@ -5,15 +5,15 @@ Dim swApp           As SldWorks.SldWorks
 '------------------------------------------------------------------------------'
 Sub modifyAndCheckin()
 
-Dim myDrawing       As SldWorks.DrawingDoc
-Dim myPart          As SldWorks.ModelDoc2
-Dim myExtension     As SldWorks.ModelDocExtension
-Dim myModel         As SldWorks.ModelDoc2
+Dim swDrawing       As SldWorks.DrawingDoc
+Dim swPart          As SldWorks.ModelDoc2
+Dim swExtension     As SldWorks.ModelDocExtension
+Dim swModel         As SldWorks.ModelDoc2
 Dim PDMConnection   As IPDMWConnection
-Dim myPDMPart       As PDMWDocument
-Dim myPDMDrawing    As PDMWDocument
+Dim PDMPart         As PDMWDocument
+Dim PDMDrawing      As PDMWDocument
 Dim checkInDocument As PDMWDocument
-Dim myCustPropMgr   As SldWorks.CustomPropertyManager
+Dim swCustPropMgr   As SldWorks.CustomPropertyManager
 
 Dim errors          As Long
 Dim warnings        As Long
@@ -58,21 +58,21 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     drawingName = modelnumber(j) + ".SLDDRW"
     modelName = modelnumber(j) + ".SLDPRT"
 
-    Set myPDMPart = PDMConnection.GetSpecificDocument(modelName)
-    Set myPDMDrawing = PDMConnection.GetSpecificDocument(drawingName)
+    Set PDMPart = PDMConnection.GetSpecificDocument(modelName)
+    Set PDMDrawing = PDMConnection.GetSpecificDocument(drawingName)
 
-    If myPDMPart.Owner <> pdmName Then
-        myPDMPart.TakeOwnership
+    If PDMPart.Owner <> pdmName Then
+        PDMPart.TakeOwnership
     End If
 
-    If myPDMDrawing.Owner <> pdmName Then
-        myPDMDrawing.TakeOwnership
+    If PDMDrawing.Owner <> pdmName Then
+        PDMDrawing.TakeOwnership
     End If
 
-    myPDMDrawing.Save (tempDir)
-    myPDMPart.Save (tempDir)
+    PDMDrawing.Save (tempDir)
+    PDMPart.Save (tempDir)
 
-    Set myPart = swApp.OpenDoc6(tempDir + modelName, _
+    Set swPart = swApp.OpenDoc6(tempDir + modelName, _
         swDocPART, _
         swOpenDocOptions_Silent, _
         "", _
@@ -80,60 +80,58 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         warnings)
 
     'do stuff with model here
-    Set myExtension = myPart.Extension
-    Set myCustPropMgr = myExtension.CustomPropertyManager("")
+    Set swExtension = swPart.Extension
+    Set swCustPropMgr = swExtension.CustomPropertyManager("")
 
-    bool = myCustPropMgr.Add2("Finish", swCustomInfoType_e.swCustomInfoText, " ")
-    bool = myCustPropMgr.Add2("Description of Change", swCustomInfoType_e.swCustomInfoText, " ")
-    bool = myCustPropMgr.Add2("Date of Change", swCustomInfoType_e.swCustomInfoText, " ")
-    bool = myCustPropMgr.Add2("DrawnBy", swCustomInfoType_e.swCustomInfoText, " ")
-    bool = myCustPropMgr.Add2("DrawnDate", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = swCustPropMgr.Add2("Finish", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = swCustPropMgr.Add2("Description of Change", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = swCustPropMgr.Add2("Date of Change", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = swCustPropMgr.Add2("DrawnBy", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = swCustPropMgr.Add2("DrawnDate", swCustomInfoType_e.swCustomInfoText, " ")
 
-    bool = myCustPropMgr.Set("Finish", CP_Finish)
-    bool = myCustPropMgr.Set("Description of Change", CP_Change)
-    bool = myCustPropMgr.Set("Date of Change", CP_ChangeDate)
-    bool = myCustPropMgr.Set("DrawnBy", CP_DrawnBy)
-    bool = myCustPropMgr.Set("DrawnDate", CP_DrawnDate)
-    bool = myCustPropMgr.Set("Material", CP_Material)
+    bool = swCustPropMgr.Set("Finish", CP_Finish)
+    bool = swCustPropMgr.Set("Description of Change", CP_Change)
+    bool = swCustPropMgr.Set("Date of Change", CP_ChangeDate)
+    bool = swCustPropMgr.Set("DrawnBy", CP_DrawnBy)
+    bool = swCustPropMgr.Set("DrawnDate", CP_DrawnDate)
+    bool = swCustPropMgr.Set("Material", CP_Material)
 
-    bool = myPart.Save3(1, errors, warnings)
+    bool = swPart.Save3(1, errors, warnings)
 
-    Set myDrawing = swApp.OpenDoc6(tempDir + drawingName, _
+    Set swDrawing = swApp.OpenDoc6(tempDir + drawingName, _
         swDocDRAWING, _
         swOpenDocOptions_Silent, _
         "", _
         errors, _
         warnings)
 
-    'pass an active drawing
+    changeDrawingSheet swDrawing
 
-    changeDrawingSheet(myDrawing)
+    bool = swDrawing.Save3(17, errors, warnings)
 
-    bool = myDrawing.Save3(17, errors, warnings)
-
-    swApp.QuitDoc myDrawing.GetTitle
-    swApp.QuitDoc myPart.GetTitle
+    swApp.QuitDoc swDrawing.GetTitle
+    swApp.QuitDoc swPart.GetTitle
 
     Set checkInDocument = PDMConnection.CheckIn( _
         tempDir + drawingName, _
-        myPDMDrawing.project, _
-        myPDMDrawing.Number, _
-        myPDMDrawing.Description, _
+        PDMDrawing.project, _
+        PDMDrawing.Number, _
+        PDMDrawing.Description, _
         "", _
         Default, _
         "", _
-        myPDMDrawing.GetStatus, _
+        PDMDrawing.GetStatus, _
         False, _
         "")
     Set checkInDocument = PDMConnection.CheckIn( _
         tempDir + modelName, _
-        myPDMPart.project, _
-        myPDMPart.Number, _
-        myPDMPart.Description, _
+        PDMPart.project, _
+        PDMPart.Number, _
+        PDMPart.Description, _
         "", _
         Default, _
         "", _
-        myPDMPart.GetStatus, _
+        PDMPart.GetStatus, _
         False, _
         "")
 
@@ -147,13 +145,13 @@ PDMConnection.Logout
 
 End Sub
 '------------------------------------------------------------------------------'
-Sub changeDrawingSheet(myDrawing as SldWorks.DrawingDoc)
+Sub changeDrawingSheet(swDrawing as SldWorks.DrawingDoc)
 
-Dim myExtension     As SldWorks.ModelDocExtension
-Dim myModel         As SldWorks.ModelDoc2
-Dim mySheet         As SldWorks.Sheet
-Dim myView          As SldWorks.View
-Dim myNote          As SldWorks.Note
+Dim swExtension     As SldWorks.ModelDocExtension
+Dim swModel         As SldWorks.ModelDoc2
+Dim swSheet         As SldWorks.Sheet
+Dim swView          As SldWorks.View
+Dim swNote          As SldWorks.Note
 
 Dim regEx           As New RegExp
 
@@ -169,8 +167,8 @@ Const defaultTemplate  As String = _
     "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
     "\Current Templates\DRAWING (IMPERIAL).slddrt"
 
-set myModel = myDrawing
-Set myExtension = myModel.Extension
+set swModel = swDrawing
+Set swExtension = swModel.Extension
 
 With regEx
     .Global = True
@@ -178,19 +176,19 @@ With regEx
     .IgnoreCase = True
 End With
 
-vSheetName = myDrawing.GetSheetNames
+vSheetName = swDrawing.GetSheetNames
 
 For i = 0 To UBound(vSheetName)
-    bool = myDrawing.ActivateSheet(vSheetName(i))
-    Set myView = myDrawing.GetFirstView
-    While Not myView Is Nothing
-        Set myNote = myView.GetFirstNote
-        While Not myNote Is Nothing
+    bool = swDrawing.ActivateSheet(vSheetName(i))
+    Set swView = swDrawing.GetFirstView
+    While Not swView Is Nothing
+        Set swNote = swView.GetFirstNote
+        While Not swNote Is Nothing
             regEx.Pattern = "THIS PART DOES NOT USE A CUT FILE"
-            If regEx.Test(myNote.GetText) Then
-                Set myNote = myNote.GetNext
-                myModel.ClearSelection2 (True)
-                bool = myExtension.SelectByID2("CUT", _
+            If regEx.Test(swNote.GetText) Then
+                Set swNote = swNote.GetNext
+                swModel.ClearSelection2 (True)
+                bool = swExtension.SelectByID2("CUT", _
                     "SHEET", _
                     0, _
                     0, _
@@ -199,16 +197,16 @@ For i = 0 To UBound(vSheetName)
                     0, _
                     Nothing, _
                     0)
-                bool = myExtension.DeleteSelection2(0)
+                bool = swExtension.DeleteSelection2(0)
                 vSheetName(i) = "DELETED"
             Else
                 regEx.Pattern = "dxf for cut file|" + _
                     "this sheet intentionally left blank"
-                If regEx.Test(myNote.GetText) Then
-                    noteName = myNote.GetName + "@" + myView.GetName2
-                    Set myNote = myNote.GetNext
-                    myModel.ClearSelection2 (True)
-                    bool = myExtension.SelectByID2(noteName, _
+                If regEx.Test(swNote.GetText) Then
+                    noteName = swNote.GetName + "@" + swView.GetName2
+                    Set swNote = swNote.GetNext
+                    swModel.ClearSelection2 (True)
+                    bool = swExtension.SelectByID2(noteName, _
                         "NOTE", _
                         0, _
                         0, _
@@ -217,37 +215,37 @@ For i = 0 To UBound(vSheetName)
                         0, _
                         Nothing, _
                         0)
-                    myModel.EditDelete
+                    swModel.EditDelete
                 Else
-                    Set myNote = myNote.GetNext
+                    Set swNote = swNote.GetNext
                 End If
             End If
         Wend
-        Set myView = myView.GetNextView
+        Set swView = swView.GetNextView
     Wend
 
     regEx.Pattern = "cut"
-    myDrawing.ActivateSheet (vSheetName(i))
-    Set mySheet = myDrawing.Sheet(vSheetName(i))
+    swDrawing.ActivateSheet (vSheetName(i))
+    Set swSheet = swDrawing.Sheet(vSheetName(i))
 
     If regEx.Test(vSheetName(i)) Then
         If vSheetName(i) <> "DELETED" Then
-            bool = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = swDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 13, _
-                mySheet.GetProperties(2), _
-                mySheet.GetProperties(3), _
+                swSheet.GetProperties(2), _
+                swSheet.GetProperties(3), _
                 False, _
                 None, _
                 0#, _
                 0#, _
                 "Default", _
                 True)
-            bool = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = swDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 12, _
-                mySheet.GetProperties(2), _
-                mySheet.GetProperties(3), _
+                swSheet.GetProperties(2), _
+                swSheet.GetProperties(3), _
                 False, _
                 cutTemplate, _
                 0#, _
@@ -257,22 +255,22 @@ For i = 0 To UBound(vSheetName)
         End If
     Else
         If vSheetName(i) <> "DELETED" Then
-            bool = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = swDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 13, _
-                mySheet.GetProperties(2), _
-                mySheet.GetProperties(3), _
+                swSheet.GetProperties(2), _
+                swSheet.GetProperties(3), _
                 False, _
                 None, _
                 0#, _
                 0#, _
                 "Default", _
                 True)
-            bool = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = swDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 12, _
-                mySheet.GetProperties(2), _
-                mySheet.GetProperties(3), _
+                swSheet.GetProperties(2), _
+                swSheet.GetProperties(3), _
                 False, _
                 defaultTemplate, _
                 0#, _
