@@ -5,21 +5,16 @@ Dim myModel         As SldWorks.ModelDoc2
 Dim myExtension     As SldWorks.ModelDocExtension
 Dim myPart          As SldWorks.ModelDoc2
 Dim myDrawing       As SldWorks.DrawingDoc
-Dim mySheet         As SldWorks.Sheet
-Dim myView          As SldWorks.View
-Dim myNote          As SldWorks.Note
-Dim myCustPropMgr   As SldWorks.CustomPropertyManager
-Dim fso             As Object
-Dim PDMConnection   As IPDMWConnection
-Dim checkInDocument As PDMWDocument
-Dim myPDMPart       As PDMWDocument
-Dim myPDMDrawing    As PDMWDocument
-Dim drawingName     As String
-Dim modelName       As String
+
 Dim bool            As Boolean
-Dim modelnumber()   As String
 '------------------------------------------------------------------------------'
 Sub main()
+
+Dim PDMConnection   As IPDMWConnection
+Dim myPDMPart       As PDMWDocument
+Dim myPDMDrawing    As PDMWDocument
+Dim checkInDocument As PDMWDocument
+Dim myCustPropMgr   As SldWorks.CustomPropertyManager
 
 Dim errors          As Long
 Dim warnings        As Long
@@ -29,7 +24,9 @@ Dim CP_ChangeDate   As String
 Dim CP_DrawnBy      As String
 Dim CP_DrawnDate    As String
 Dim CP_Material     As String
-
+Dim drawingName     As String
+Dim modelName       As String
+Dim modelnumber()   As String
 Dim j               As Integer
 
 Const inputFile     As String = "C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt"
@@ -46,7 +43,6 @@ CP_DrawnBy = "JP"
 CP_DrawnDate = Format(Now, "mm/d/yy")
 CP_Material = "6061-T6 ALLOY"
 
-Set fso = CreateObject("scripting.filesystemobject")
 Set PDMConnection = CreateObject("PDMWorks.PDMWConnection")
 Set swApp = Application.SldWorks
 
@@ -153,11 +149,15 @@ End Sub
 '------------------------------------------------------------------------------'
 Sub changeActiveDrawingSheet()
 
-Dim regEx As New RegExp
+Dim mySheet         As SldWorks.Sheet
+Dim myView          As SldWorks.View
+Dim myNote          As SldWorks.Note
 
-Dim vSheetName As Variant
-Dim noteName As String
-Dim i As Integer
+Dim regEx           As New RegExp
+
+Dim vSheetName      As Variant
+Dim noteName        As String
+Dim i               As Integer
 
 Const cutTemplate      As String = _
     "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
