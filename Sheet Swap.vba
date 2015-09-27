@@ -8,7 +8,6 @@ Dim myDrawing       As SldWorks.DrawingDoc
 Dim mySheet         As SldWorks.Sheet
 Dim myView          As SldWorks.View
 Dim myNote          As SldWorks.Note
-Dim myExportPDFData As SldWorks.ExportPdfData
 Dim myCustPropMgr   As SldWorks.CustomPropertyManager
 Dim fso             As Object
 Dim PDMConnection   As IPDMWConnection
@@ -17,17 +16,13 @@ Dim myPDMPart       As PDMWDocument
 Dim myPDMDrawing    As PDMWDocument
 Dim drawingName     As String
 Dim modelName       As String
-Dim Revision        As String
-Dim PDMRevision     As String
-Dim evalRev         As String
-Dim revMessage      As String
+Dim bool            As Boolean
+Dim modelnumber()   As String
+'------------------------------------------------------------------------------'
+Sub main()
+
 Dim errors          As Long
 Dim warnings        As Long
-Dim boolstatus      As Boolean
-Dim modelnumber()   As String
-
-Sub main() '--------------------------------------------------------------------'
-
 Dim CP_Finish       As String
 Dim CP_Change       As String
 Dim CP_ChangeDate   As String
@@ -38,8 +33,7 @@ Dim CP_Material     As String
 Dim j               As Integer
 
 Const inputFile     As String = "C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt"
-Const vendorDir     As String = "X:\Engineering\Vendor Files"
-Const tempDir       As String = "X:\Engineering\TEMP"
+Const tempDir       As String = "X:\Engineering\TEMP\"
 Const pdmName       As String = "jpettit"
 Const pdmLogin      As String = "CDGshoxs!"
 Const pdmServer     As String = "SHOXS1"
@@ -68,7 +62,6 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     drawingName = modelnumber(j) + ".SLDDRW"
     modelName = modelnumber(j) + ".SLDPRT"
 
-    'Save the drawing in vendor files and determine the correct revision
     Set myPDMPart = PDMConnection.GetSpecificDocument(modelName)
     Set myPDMDrawing = PDMConnection.GetSpecificDocument(drawingName)
 
@@ -83,7 +76,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     myPDMDrawing.Save (tempDir)
     myPDMPart.Save (tempDir)
 
-    Set myPart = swApp.OpenDoc6(tempDir + "\" + modelName, _
+    Set myPart = swApp.OpenDoc6(tempDir + modelName, _
         swDocPART, _
         swOpenDocOptions_Silent, _
         "", _
@@ -94,22 +87,22 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     Set myExtension = myPart.Extension
     Set myCustPropMgr = myExtension.CustomPropertyManager("")
 
-    boolstatus = myCustPropMgr.Add2("Finish", swCustomInfoType_e.swCustomInfoText, " ")
-    boolstatus = myCustPropMgr.Add2("Description of Change", swCustomInfoType_e.swCustomInfoText, " ")
-    boolstatus = myCustPropMgr.Add2("Date of Change", swCustomInfoType_e.swCustomInfoText, " ")
-    boolstatus = myCustPropMgr.Add2("DrawnBy", swCustomInfoType_e.swCustomInfoText, " ")
-    boolstatus = myCustPropMgr.Add2("DrawnDate", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = myCustPropMgr.Add2("Finish", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = myCustPropMgr.Add2("Description of Change", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = myCustPropMgr.Add2("Date of Change", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = myCustPropMgr.Add2("DrawnBy", swCustomInfoType_e.swCustomInfoText, " ")
+    bool = myCustPropMgr.Add2("DrawnDate", swCustomInfoType_e.swCustomInfoText, " ")
 
-    boolstatus = myCustPropMgr.Set("Finish", CP_Finish)
-    boolstatus = myCustPropMgr.Set("Description of Change", CP_Change)
-    boolstatus = myCustPropMgr.Set("Date of Change", CP_ChangeDate)
-    boolstatus = myCustPropMgr.Set("DrawnBy", CP_DrawnBy)
-    boolstatus = myCustPropMgr.Set("DrawnDate", CP_DrawnDate)
-    boolstatus = myCustPropMgr.Set("Material", CP_Material)
+    bool = myCustPropMgr.Set("Finish", CP_Finish)
+    bool = myCustPropMgr.Set("Description of Change", CP_Change)
+    bool = myCustPropMgr.Set("Date of Change", CP_ChangeDate)
+    bool = myCustPropMgr.Set("DrawnBy", CP_DrawnBy)
+    bool = myCustPropMgr.Set("DrawnDate", CP_DrawnDate)
+    bool = myCustPropMgr.Set("Material", CP_Material)
 
-    boolstatus = myPart.Save3(1, errors, warnings)
+    bool = myPart.Save3(1, errors, warnings)
 
-    Set myDrawing = swApp.OpenDoc6(tempDir + "\" + drawingName, _
+    Set myDrawing = swApp.OpenDoc6(tempDir + drawingName, _
         swDocDRAWING, _
         swOpenDocOptions_Silent, _
         "", _
@@ -120,13 +113,13 @@ For j = LBound(modelnumber) To UBound(modelnumber)
 
     changeActiveDrawingSheet
 
-    boolstatus = myDrawing.Save3(17, errors, warnings)
+    bool = myDrawing.Save3(17, errors, warnings)
 
     swApp.QuitDoc myDrawing.GetTitle
     swApp.QuitDoc myPart.GetTitle
 
     Set checkInDocument = PDMConnection.CheckIn( _
-        tempDir + "\" + drawingName, _
+        tempDir + drawingName, _
         myPDMDrawing.project, _
         myPDMDrawing.Number, _
         myPDMDrawing.Description, _
@@ -137,7 +130,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         False, _
         "")
     Set checkInDocument = PDMConnection.CheckIn( _
-        tempDir + "\" + modelName, _
+        tempDir + modelName, _
         myPDMPart.project, _
         myPDMPart.Number, _
         myPDMPart.Description, _
@@ -157,13 +150,11 @@ Next j
 PDMConnection.Logout
 
 End Sub
-
-Sub changeActiveDrawingSheet() '------------------------------------------------'
+'------------------------------------------------------------------------------'
+Sub changeActiveDrawingSheet()
 
 Dim regEx As New RegExp
 
-Dim longstatus As Long
-Dim longwarnings As Long
 Dim vSheetName As Variant
 Dim noteName As String
 Dim i As Integer
@@ -188,7 +179,7 @@ End With
 vSheetName = myDrawing.GetSheetNames
 
 For i = 0 To UBound(vSheetName)
-    boolstatus = myDrawing.ActivateSheet(vSheetName(i))
+    bool = myDrawing.ActivateSheet(vSheetName(i))
     Set myView = myDrawing.GetFirstView
     While Not myView Is Nothing
         Set myNote = myView.GetFirstNote
@@ -197,7 +188,7 @@ For i = 0 To UBound(vSheetName)
             If regEx.Test(myNote.GetText) Then
                 Set myNote = myNote.GetNext
                 myModel.ClearSelection2 (True)
-                boolstatus = myExtension.SelectByID2("CUT", _
+                bool = myExtension.SelectByID2("CUT", _
                     "SHEET", _
                     0, _
                     0, _
@@ -206,7 +197,7 @@ For i = 0 To UBound(vSheetName)
                     0, _
                     Nothing, _
                     0)
-                boolstatus = myExtension.DeleteSelection2(0)
+                bool = myExtension.DeleteSelection2(0)
                 vSheetName(i) = "DELETED"
             Else
                 regEx.Pattern = "dxf for cut file|" + _
@@ -215,7 +206,7 @@ For i = 0 To UBound(vSheetName)
                     noteName = myNote.GetName + "@" + myView.GetName2
                     Set myNote = myNote.GetNext
                     myModel.ClearSelection2 (True)
-                    boolstatus = myExtension.SelectByID2(noteName, _
+                    bool = myExtension.SelectByID2(noteName, _
                         "NOTE", _
                         0, _
                         0, _
@@ -239,7 +230,7 @@ For i = 0 To UBound(vSheetName)
 
     If regEx.Test(vSheetName(i)) Then
         If vSheetName(i) <> "DELETED" Then
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = myDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 13, _
                 mySheet.GetProperties(2), _
@@ -250,7 +241,7 @@ For i = 0 To UBound(vSheetName)
                 0#, _
                 "Default", _
                 True)
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = myDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 12, _
                 mySheet.GetProperties(2), _
@@ -264,7 +255,7 @@ For i = 0 To UBound(vSheetName)
         End If
     Else
         If vSheetName(i) <> "DELETED" Then
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = myDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 13, _
                 mySheet.GetProperties(2), _
@@ -275,7 +266,7 @@ For i = 0 To UBound(vSheetName)
                 0#, _
                 "Default", _
                 True)
-            boolstatus = myDrawing.SetupSheet5(vSheetName(i), _
+            bool = myDrawing.SetupSheet5(vSheetName(i), _
                 0, _
                 12, _
                 mySheet.GetProperties(2), _
@@ -290,7 +281,7 @@ For i = 0 To UBound(vSheetName)
     End If
 Next i
 End Sub
-
+'------------------------------------------------------------------------------'
 Private Function readData(filepath As String) As String()
 
 Open filepath For Input As #1

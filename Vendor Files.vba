@@ -1,6 +1,6 @@
 Option Explicit
 Dim swApp As SldWorks.SldWorks
-
+'------------------------------------------------------------------------------'
 Sub main()
 
 'object declarations
@@ -20,7 +20,6 @@ Const pdmLogin      As String = "CDGshoxs!"
 Const pdmServer     As String = "SHOXS1"
 
 PDMConnection.Login pdmName, pdmLogin, pdmServer
-'determine the names of the files in pdmworks by examining the active document name
 
 partToSave = Left(swModel.GetTitle, 6)
 swApp.QuitDoc swModel.GetTitle
@@ -29,8 +28,9 @@ errors = saveVendorFiles(partToSave, PDMConnection)
 PDMConnection.Logout
 
 End Sub
-
-Public function saveVendorFiles(partNumber as string, passedPDMConnection as IPDMWConnection) as Long
+'------------------------------------------------------------------------------'
+Public function saveVendorFiles(partNumber as string, _
+    passedPDMConnection as IPDMWConnection) as Long
 
 'object declarations
 Dim fso             As Object
@@ -46,7 +46,7 @@ Dim Revision        As String
 Dim saveName        As String
 Dim errors          As Long
 Dim warnings        As Long
-Dim boolstatus      As Boolean
+Dim bool      As Boolean
 
 'vendor files and temp locations on x drive
 Const vendorDir     As String = "X:\Engineering\Vendor Files\"
@@ -73,7 +73,7 @@ Set swModel = swApp.OpenDoc6(tempDir + modelName, _
     errors, _
     warnings)
 Set swModelDocExt = swModel.Extension
-boolstatus = swModelDocExt.SaveAs(saveName + ".igs", _
+bool = swModelDocExt.SaveAs(saveName + ".igs", _
     swSaveAsCurrentVersion, _
     swSaveAsOptions_Silent, _
     Nothing, _
@@ -90,8 +90,8 @@ Set swDrawing = swApp.OpenDoc6(tempDir + drawingName, _
     warnings)
 Set swModelDocExt = swDrawing.Extension
 Set swExportPDFData = swApp.GetExportFileData(1)
-boolstatus = swExportPDFData.SetSheets(swExportData_ExportAllSheets, Nothing)
-boolstatus = swModelDocExt.SaveAs(saveName + ".pdf", _
+bool = swExportPDFData.SetSheets(swExportData_ExportAllSheets, Nothing)
+bool = swModelDocExt.SaveAs(saveName + ".pdf", _
     swSaveAsCurrentVersion, _
     swSaveAsOptions_Silent, _
     swExportPDFData, _
@@ -100,7 +100,7 @@ boolstatus = swModelDocExt.SaveAs(saveName + ".pdf", _
 
 'if any drawing sheets are named CUT, switch to that sheet and save as a dxf
 If swDrawing.ActivateSheet("CUT") Then
-    boolstatus = swModelDocExt.SaveAs(saveName + ".dxf", _
+    bool = swModelDocExt.SaveAs(saveName + ".dxf", _
         swSaveAsCurrentVersion, _
         swSaveAsOptions_Silent, _
         Nothing, _
