@@ -1,14 +1,14 @@
 Option Explicit
 
 Dim swApp           As SldWorks.SldWorks
-Dim myModel         As SldWorks.ModelDoc2
-Dim myExtension     As SldWorks.ModelDocExtension
-Dim myPart          As SldWorks.ModelDoc2
-Dim myDrawing       As SldWorks.DrawingDoc
-Dim bool            As Boolean
-'------------------------------------------------------------------------------'
-Sub main()
 
+'------------------------------------------------------------------------------'
+Sub modifyAndCheckin()
+
+Dim myDrawing       As SldWorks.DrawingDoc
+Dim myPart          As SldWorks.ModelDoc2
+Dim myExtension     As SldWorks.ModelDocExtension
+Dim myModel         As SldWorks.ModelDoc2
 Dim PDMConnection   As IPDMWConnection
 Dim myPDMPart       As PDMWDocument
 Dim myPDMDrawing    As PDMWDocument
@@ -27,6 +27,7 @@ Dim drawingName     As String
 Dim modelName       As String
 Dim modelnumber()   As String
 Dim j               As Integer
+Dim bool            As Boolean
 
 Const inputFile     As String = "C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt"
 Const tempDir       As String = "X:\Engineering\TEMP\"
@@ -106,7 +107,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
 
     'pass an active drawing
 
-    changeActiveDrawingSheet
+    changeDrawingSheet(myDrawing)
 
     bool = myDrawing.Save3(17, errors, warnings)
 
@@ -146,8 +147,10 @@ PDMConnection.Logout
 
 End Sub
 '------------------------------------------------------------------------------'
-Sub changeActiveDrawingSheet()
+Sub changeDrawingSheet(myDrawing as SldWorks.DrawingDoc)
 
+Dim myExtension     As SldWorks.ModelDocExtension
+Dim myModel         As SldWorks.ModelDoc2
 Dim mySheet         As SldWorks.Sheet
 Dim myView          As SldWorks.View
 Dim myNote          As SldWorks.Note
@@ -157,6 +160,7 @@ Dim regEx           As New RegExp
 Dim vSheetName      As Variant
 Dim noteName        As String
 Dim i               As Integer
+Dim bool            As Boolean
 
 Const cutTemplate      As String = _
     "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
@@ -165,14 +169,13 @@ Const defaultTemplate  As String = _
     "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
     "\Current Templates\DRAWING (IMPERIAL).slddrt"
 
-Set myModel = swApp.ActiveDoc
+set myModel = myDrawing
 Set myExtension = myModel.Extension
-Set myDrawing = myModel
 
 With regEx
-            .Global = True
-            .Multiline = True
-            .IgnoreCase = True
+    .Global = True
+    .Multiline = True
+    .IgnoreCase = True
 End With
 
 vSheetName = myDrawing.GetSheetNames
