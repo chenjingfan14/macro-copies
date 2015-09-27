@@ -145,7 +145,7 @@ PDMConnection.Logout
 
 End Sub
 '------------------------------------------------------------------------------'
-Sub changeDrawingSheet(swDrawing as SldWorks.DrawingDoc)
+Sub changeDrawingSheet(swDrawing As SldWorks.DrawingDoc)
 
 Dim swExtension     As SldWorks.ModelDocExtension
 Dim swModel         As SldWorks.ModelDoc2
@@ -167,7 +167,7 @@ Const defaultTemplate  As String = _
     "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
     "\Current Templates\DRAWING (IMPERIAL).slddrt"
 
-set swModel = swDrawing
+Set swModel = swDrawing
 Set swExtension = swModel.Extension
 
 With regEx
@@ -175,6 +175,18 @@ With regEx
     .Multiline = True
     .IgnoreCase = True
 End With
+
+swModel.ClearSelection2 (True)
+bool = swExtension.SelectByID2("INSPECTION", _
+    "SHEET", _
+    0, _
+    0, _
+    0, _
+    False, _
+    0, _
+    Nothing, _
+    0)
+bool = swExtension.DeleteSelection2(0)
 
 vSheetName = swDrawing.GetSheetNames
 
@@ -224,35 +236,34 @@ For i = 0 To UBound(vSheetName)
         Set swView = swView.GetNextView
     Wend
 
-    regEx.Pattern = "cut"
+    regEx.Pattern = "CUT"
     swDrawing.ActivateSheet (vSheetName(i))
     Set swSheet = swDrawing.Sheet(vSheetName(i))
 
     If regEx.Test(vSheetName(i)) Then
-        If vSheetName(i) <> "DELETED" Then
-            bool = swDrawing.SetupSheet5(vSheetName(i), _
-                0, _
-                13, _
-                swSheet.GetProperties(2), _
-                swSheet.GetProperties(3), _
-                False, _
-                None, _
-                0#, _
-                0#, _
-                "Default", _
-                True)
-            bool = swDrawing.SetupSheet5(vSheetName(i), _
-                0, _
-                12, _
-                swSheet.GetProperties(2), _
-                swSheet.GetProperties(3), _
-                False, _
-                cutTemplate, _
-                0#, _
-                0#, _
-                "Default", _
-                True)
-        End If
+        bool = swDrawing.SetupSheet5(vSheetName(i), _
+            0, _
+            13, _
+            swSheet.GetProperties(2), _
+            swSheet.GetProperties(3), _
+            False, _
+            None, _
+            0#, _
+            0#, _
+            "Default", _
+            True)
+        bool = swDrawing.SetupSheet5(vSheetName(i), _
+            0, _
+            12, _
+            swSheet.GetProperties(2), _
+            swSheet.GetProperties(3), _
+            False, _
+            cutTemplate, _
+            0#, _
+            0#, _
+            "Default", _
+            True)
+
     Else
         If vSheetName(i) <> "DELETED" Then
             bool = swDrawing.SetupSheet5(vSheetName(i), _
@@ -280,6 +291,9 @@ For i = 0 To UBound(vSheetName)
         End If
     End If
 Next i
+
+bool = swDrawing.ReorderSheets(bringToFront(swDrawing.GetSheetNames, "CUT"))
+
 End Sub
 '------------------------------------------------------------------------------'
 Private Function readData(filepath As String) As String()
@@ -297,4 +311,31 @@ Loop
 
 Close #1
 readData = records()
+End Function
+'------------------------------------------------------------------------------'
+Private Function bringToFront(inputArray As Variant, _
+    stringToFind As String) As Variant
+
+Dim i               As Integer
+Dim j               As Integer
+Dim first           As Integer
+Dim last            As Integer
+Dim outputArray()   As String
+
+first = LBound(inputArray)
+last = UBound(inputArray)
+
+ReDim outputArray(first To last)
+
+For i = first To last
+    If inputArray(i) = stringToFind Then
+        For j = first To (i - 1)
+            outputArray(j + 1) = inputArray(j)
+        Next j
+        outputArray(first) = stringToFind
+    End If
+Next i
+
+bringToFront = outputArray
+
 End Function
