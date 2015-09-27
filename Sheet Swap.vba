@@ -5,7 +5,6 @@ Dim myModel         As SldWorks.ModelDoc2
 Dim myExtension     As SldWorks.ModelDocExtension
 Dim myPart          As SldWorks.ModelDoc2
 Dim myDrawing       As SldWorks.DrawingDoc
-
 Dim bool            As Boolean
 '------------------------------------------------------------------------------'
 Sub main()
@@ -38,7 +37,7 @@ Const pdmServer     As String = "SHOXS1"
 'Custom property values to be written to each file'
 CP_Finish = "002"
 CP_Change = "CHANGED FINISH SPECIFICATION"
-CP_ChangeDate = Format(Now, "d-MMM-yy")
+CP_ChangeDate = UCase(Format(Now, "d-MMM-yy"))
 CP_DrawnBy = "JP"
 CP_DrawnDate = Format(Now, "mm/d/yy")
 CP_Material = "6061-T6 ALLOY"
