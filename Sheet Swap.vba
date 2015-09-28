@@ -307,14 +307,9 @@ If swDrawing.ActivateSheet("CUT") Then
     Set swView = swDrawing.GetFirstView
     While Not swView Is Nothing
         If swView.Type = 7 Then
-            Debug.Print swView.GetName2()
-            Debug.Print Format(swView.Position(0), "0.000")
-            Debug.Print Format(swView.GetOutline(0), "0.000")
-            Debug.Print Format(swView.GetOutline(2), "0.000")
             xDim = swView.Position
             xDim(0) = swView.Position(0) - swView.GetOutline(2) + xOffset
             swView.Position = xDim
-            Debug.Print "Now " & Format(swView.Position(0), "0.000")
         End If
         Set swView = swView.GetNextView
     Wend
