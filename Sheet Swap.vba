@@ -190,7 +190,13 @@ bool = swExtension.DeleteSelection2(0)
 
 vSheetName = swDrawing.GetSheetNames
 
-For i = 0 To UBound(vSheetName)
+for i = LBound(vSheetName) To UBound(vSheetName)
+    swDrawing.Sheet(vSheetName(i)).SetName(UCase(vSheetName(i)))
+Next i
+
+vSheetName = swDrawing.GetSheetNames
+
+For i = LBound(vSheetName) To UBound(vSheetName)
     bool = swDrawing.ActivateSheet(vSheetName(i))
     Set swView = swDrawing.GetFirstView
     While Not swView Is Nothing
