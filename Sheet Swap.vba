@@ -159,6 +159,7 @@ Dim vSheetName      As Variant
 Dim noteName        As String
 Dim i               As Integer
 Dim bool            As Boolean
+Dim xDim            As Variant
 
 Const cutTemplate      As String = _
     "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
@@ -166,6 +167,8 @@ Const cutTemplate      As String = _
 Const defaultTemplate  As String = _
     "X:\Engineering\Engineering Resources\SolidWorks Templates" + _
     "\Current Templates\DRAWING (IMPERIAL).slddrt"
+
+Const xOffset       As Double = -0.05
 
 Set swModel = swDrawing
 Set swExtension = swModel.Extension
@@ -190,8 +193,8 @@ bool = swExtension.DeleteSelection2(0)
 
 vSheetName = swDrawing.GetSheetNames
 
-for i = LBound(vSheetName) To UBound(vSheetName)
-    swDrawing.Sheet(vSheetName(i)).SetName(UCase(vSheetName(i)))
+For i = LBound(vSheetName) To UBound(vSheetName)
+    swDrawing.Sheet(vSheetName(i)).SetName (UCase(vSheetName(i)))
 Next i
 
 vSheetName = swDrawing.GetSheetNames
@@ -203,7 +206,7 @@ For i = LBound(vSheetName) To UBound(vSheetName)
         Set swNote = swView.GetFirstNote
         While Not swNote Is Nothing
             regEx.Pattern = "THIS PART DOES NOT USE A CUT FILE"
-            If regEx.Test(swNote.GetText) Then
+            If regEx.test(swNote.GetText) Then
                 Set swNote = swNote.GetNext
                 swModel.ClearSelection2 (True)
                 bool = swExtension.SelectByID2("CUT", _
@@ -220,7 +223,7 @@ For i = LBound(vSheetName) To UBound(vSheetName)
             Else
                 regEx.Pattern = "dxf for cut file|" + _
                     "this sheet intentionally left blank"
-                If regEx.Test(swNote.GetText) Then
+                If regEx.test(swNote.GetText) Then
                     noteName = swNote.GetName + "@" + swView.GetName2
                     Set swNote = swNote.GetNext
                     swModel.ClearSelection2 (True)
@@ -246,7 +249,7 @@ For i = LBound(vSheetName) To UBound(vSheetName)
     swDrawing.ActivateSheet (vSheetName(i))
     Set swSheet = swDrawing.Sheet(vSheetName(i))
 
-    If regEx.Test(vSheetName(i)) Then
+    If regEx.test(vSheetName(i)) Then
         bool = swDrawing.SetupSheet5(vSheetName(i), _
             0, _
             13, _
@@ -299,6 +302,23 @@ For i = LBound(vSheetName) To UBound(vSheetName)
 Next i
 
 bool = swDrawing.ReorderSheets(bringToFront(swDrawing.GetSheetNames, "CUT"))
+
+If swDrawing.ActivateSheet("CUT") Then
+    Set swView = swDrawing.GetFirstView
+    While Not swView Is Nothing
+        If swView.Type = 7 Then
+            Debug.Print swView.GetName2()
+            Debug.Print Format(swView.Position(0), "0.000")
+            Debug.Print Format(swView.GetOutline(0), "0.000")
+            Debug.Print Format(swView.GetOutline(2), "0.000")
+            xDim = swView.Position
+            xDim(0) = swView.Position(0) - swView.GetOutline(2) + xOffset
+            swView.Position = xDim
+            Debug.Print "Now " & Format(swView.Position(0), "0.000")
+        End If
+        Set swView = swView.GetNextView
+    Wend
+End If
 
 End Sub
 '------------------------------------------------------------------------------'
