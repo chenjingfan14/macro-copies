@@ -338,6 +338,9 @@ For i = first To last
         For j = first To (i - 1)
             outputArray(j + 1) = inputArray(j)
         Next j
+        For j = (i + 1) To last
+            outputArray(j) = inputArray(j)
+        Next j
         outputArray(first) = stringToFind
     End If
 Next i
