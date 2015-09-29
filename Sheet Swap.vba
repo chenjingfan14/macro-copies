@@ -402,18 +402,23 @@ End Function
 Private Function bringToFront(inputArray As Variant, _
     stringToFind As String) As Variant
 
+'dimension local variables'
 Dim i               As Integer
 Dim j               As Integer
 Dim first           As Integer
 Dim last            As Integer
 Dim outputArray()   As String
 
+'declare the extent of the input array'
 first = LBound(inputArray)
 last = UBound(inputArray)
 
+'redim the output array to match the input array size'
 ReDim outputArray(first To last)
 
+'loop through every entry on the input array'
 For i = first To last
+    'if a match is found, move that entry to the front'
     If inputArray(i) = stringToFind Then
         For j = first To (i - 1)
             outputArray(j + 1) = inputArray(j)
@@ -425,6 +430,7 @@ For i = first To last
     End If
 Next i
 
+'set the function return to the output array'
 bringToFront = outputArray
 
 End Function
