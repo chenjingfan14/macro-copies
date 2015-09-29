@@ -377,19 +377,26 @@ End Sub
 '------------------------------------------------------------------------------'
 Private Function readData(filepath As String) As String()
 
-Open filepath For Input As #1
-
+'dimension the local variables'
 Dim k As Integer
 Dim records() As String
 
+'open the passed file for input'
+Open filepath For Input As #1
+
+'loop through every line on the file'
 Do Until EOF(1)
+    'change the length of records to match the number of files read'
     ReDim Preserve records(k)
+    'assign the line to records array'
     Line Input #1, records(k)
     k = k + 1
 Loop
 
+'close the data file and assign the output array of part numbers'
 Close #1
 readData = records()
+
 End Function
 '------------------------------------------------------------------------------'
 Private Function bringToFront(inputArray As Variant, _
