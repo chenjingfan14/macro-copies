@@ -162,12 +162,13 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'work on the drawing is finished. save it in the temp directory'
     bool = swDrawing.Save3(17, errors, warnings)
 
+    'close both the drawing and the part. they must be closed for the check in
+    'function to work correctly
+    swApp.QuitDoc swDrawing.GetTitle
+    swApp.QuitDoc swPart.GetTitle
+
     'only quit, checkin and issue vendor files if not in test mode'
     If testMode = False Then
-        'close both the drawing and the part. they must be closed for the check in
-        'function to work correctly
-        swApp.QuitDoc swDrawing.GetTitle
-        swApp.QuitDoc swPart.GetTitle
 
         'check in both the drawing and the part document to pdm. these calls are
         'currently set to up the revision level, but they don't have to
@@ -200,11 +201,21 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         errors = saveVendorFiles(modelnumber(j), PDMConnection)
     End If
 
+    'in test mode, want to examine the drawing
+    If testMode = True Then
+        Set swDrawing = swApp.OpenDoc6(tempDir + drawingName, _
+            swDocDRAWING, _
+            swOpenDocOptions_Silent, _
+            "", _
+            errors, _
+            warnings)
+    End If
+
     'the work has succeded at this point. should write to a file here or delete
     'the line in the existing input file
     Debug.Print modelnumber(j) + " FINISHED"
     Print #2, modelnumber(j) + ", FINISHED"
-
+    
 'loop back to the next model number that was read from the input file the
 'GOTO to eject from the loop points here.
 nextLoop: Next j
