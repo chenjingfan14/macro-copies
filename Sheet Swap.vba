@@ -36,6 +36,10 @@ Const pdmName       As String = "jpettit"
 Const pdmLogin      As String = "CDGshoxs!"
 Const pdmServer     As String = "SHOXS1"
 
+'set this constant to TRUE to enable test mode, where nothing will be checked in
+'and vendor files won't be saved. Also won't close items after modification
+Const testMode      As Boolean = TRUE
+
 'Custom property values to be written to each file'
 CP_Finish = "002"
 CP_Change = "CHANGED FINISH SPECIFICATION"
@@ -66,12 +70,14 @@ For j = LBound(modelnumber) To UBound(modelnumber)
 
     'if the initatior of the PDM connection is not already the owner of the'
     'part and drawing document, take ownership here. Should put a test here'
-    'to ensure availability of the ownership'
-    If PDMPart.Owner <> pdmName Then
-        PDMPart.TakeOwnership
-    End If
-    If PDMDrawing.Owner <> pdmName Then
-        PDMDrawing.TakeOwnership
+    'to ensure availability of the ownership. need to check for test mode'
+    If testMode = FALSE then
+        If PDMPart.Owner <> pdmName Then
+            PDMPart.TakeOwnership
+        End If
+        If PDMDrawing.Owner <> pdmName Then
+            PDMDrawing.TakeOwnership
+        End If
     End If
 
     'save the model and drawing retrived from PDM into the temp directory'
@@ -127,40 +133,43 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'work on the drawing is finished. save it in the temp directory'
     bool = swDrawing.Save3(17, errors, warnings)
 
-    'close both the drawing and the part. they must be closed for the check in
-    'function to work correctly
-    swApp.QuitDoc swDrawing.GetTitle
-    swApp.QuitDoc swPart.GetTitle
+    'only quit, checkin and issue vendor files if not in test mode'
+    If testMode = FALSE Then
+        'close both the drawing and the part. they must be closed for the check in
+        'function to work correctly
+        swApp.QuitDoc swDrawing.GetTitle
+        swApp.QuitDoc swPart.GetTitle
 
-    'check in both the drawing and the part document to pdm. these calls are
-    'currently set to up the revision level, but they don't have to
-    Set checkInDocument = PDMConnection.CheckIn( _
-        tempDir + drawingName, _
-        PDMDrawing.project, _
-        PDMDrawing.Number, _
-        PDMDrawing.Description, _
-        "", _
-        Default, _
-        "", _
-        PDMDrawing.GetStatus, _
-        False, _
-        "")
-    Set checkInDocument = PDMConnection.CheckIn( _
-        tempDir + modelName, _
-        PDMPart.project, _
-        PDMPart.Number, _
-        PDMPart.Description, _
-        "", _
-        Default, _
-        "", _
-        PDMPart.GetStatus, _
-        False, _
-        "")
+        'check in both the drawing and the part document to pdm. these calls are
+        'currently set to up the revision level, but they don't have to
+        Set checkInDocument = PDMConnection.CheckIn( _
+            tempDir + drawingName, _
+            PDMDrawing.project, _
+            PDMDrawing.Number, _
+            PDMDrawing.Description, _
+            "", _
+            Default, _
+            "", _
+            PDMDrawing.GetStatus, _
+            False, _
+            "")
+        Set checkInDocument = PDMConnection.CheckIn( _
+            tempDir + modelName, _
+            PDMPart.project, _
+            PDMPart.Number, _
+            PDMPart.Description, _
+            "", _
+            Default, _
+            "", _
+            PDMPart.GetStatus, _
+            False, _
+            "")
 
-    'save the vendor files for the model and drawing by calling the vendor
-    'files function. This gets passed only the number and pdmconnection, and
-    'checks the drawing and model out fresh to ensure accuracy
-    errors = saveVendorFiles(modelnumber(j),PDMConnection)
+        'save the vendor files for the model and drawing by calling the vendor
+        'files function. This gets passed only the number and pdmconnection, and
+        'checks the drawing and model out fresh to ensure accuracy
+        errors = saveVendorFiles(modelnumber(j),PDMConnection)
+    End If
 
     'the work has succeded at this point. should write to a file here or delete
     'the line in the existing input file
