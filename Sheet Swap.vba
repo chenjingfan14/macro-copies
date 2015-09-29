@@ -31,6 +31,7 @@ Dim bool            As Boolean
 
 'local constant declarations'
 Const inputFile     As String = "C:\Users\jpettit\Desktop\SCRIPTS\filesToChange.txt"
+Const outputFile    As String = "C:\Users\jpettit\Desktop\SCRIPTS\fileChangeOutput.txt"
 Const tempDir       As String = "X:\Engineering\TEMP\"
 Const pdmName       As String = "jpettit"
 Const pdmLogin      As String = "CDGshoxs!"
@@ -50,6 +51,7 @@ CP_Material = "6061-T6 ALLOY"
 
 'initialize objects and start the PDM connection'
 Set swApp = Application.SldWorks
+Open outputFile For Output As #2
 Set PDMConnection = CreateObject("PDMWorks.PDMWConnection")
 PDMConnection.Login pdmName, pdmLogin, pdmServer
 
@@ -70,11 +72,13 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     Set PDMPart = PDMConnection.GetSpecificDocument(modelName)
     If PDMPart Is Nothing Then
         Debug.Print modelnumber(j) & " PART NOT IN VAULT"
+        Print #2, modelnumber(j) & ", PART NOT IN VAULT"
         GoTo nextLoop
     End If
     Set PDMDrawing = PDMConnection.GetSpecificDocument(drawingName)
     If PDMDrawing Is Nothing Then
         Debug.Print modelnumber(j) & " DRAWING NOT IN VAULT"
+        Print #2, modelnumber(j) & ", DRAWING NOT IN VAULT"
         GoTo nextLoop
     End If
 
@@ -88,6 +92,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         Else
             If PDMPart.Owner <> pdmName Then
                 Debug.Print modelnumber(j) & " PART OWNERSHIP NOT AVAILABLE"
+                Print #2, modelnumber(j) & ", PART OWNERSHIP NOT AVAILABLE"
                 GoTo nextLoop
             End If
         End If
@@ -96,6 +101,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         Else
             If PDMDrawing.Owner <> pdmName Then
                 Debug.Print modelnumber(j) & " DRAWING OWNERSHIP NOT AVAILABLE"
+                Print #2, modelnumber(j) & ", PART OWNERSHIP NOT AVAILABLE"
                 GoTo nextLoop
             End If
         End If
@@ -197,6 +203,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'the work has succeded at this point. should write to a file here or delete
     'the line in the existing input file
     Debug.Print modelnumber(j) + " FINISHED"
+    Print #2, modelnumber(j) + ", FINISHED"
 
 'loop back to the next model number that was read from the input file the
 'GOTO to eject from the loop points here.
@@ -206,6 +213,7 @@ nextLoop: Next j
 'files left in temp and then deletes them, but this is kind of a shoddy way
 'to clean up the files in each loop...'
 PDMConnection.Logout
+Close #2
 
 End Sub
 '------------------------------------------------------------------------------'
