@@ -62,25 +62,48 @@ Debug.Print UBound(modelnumber()) + 1 & " PARTS TO CHANGE"
 'the external file, opens the part, modifies it, and checks it in'
 For j = LBound(modelnumber) To UBound(modelnumber)
 
-    'set the drawing and model names, and find the PDM objects they represent'
+    'set the drawing and model names, and find the PDM objects they represent
+    'if the drawing or part cant be set, they aren't in the vault, and we need
+    'to skip to the next loop
     drawingName = modelnumber(j) + ".SLDDRW"
     modelName = modelnumber(j) + ".SLDPRT"
     Set PDMPart = PDMConnection.GetSpecificDocument(modelName)
+    If PDMPart Is Nothing Then
+        Debug.Print modelnumber(j) & " PART NOT IN VAULT"
+        GoTo nextLoop
+    End If
     Set PDMDrawing = PDMConnection.GetSpecificDocument(drawingName)
+    If PDMDrawing Is Nothing Then
+        Debug.Print modelnumber(j) & " DRAWING NOT IN VAULT"
+        GoTo nextLoop
+    End If
 
     'if the initatior of the PDM connection is not already the owner of the'
-    'part and drawing document, take ownership here. Should put a test here'
-    'to ensure availability of the ownership. need to check for test mode'
-    If testMode = False Then
-        If PDMPart.Owner <> pdmName Then
+    'part and drawing document, take ownership here.
+    'tests for test mode, and ownership availabiltiy. if unavailable, skips to
+    'next loop
+    If testMode = True Then
+        If PDMPart.Owner = "" Then
             PDMPart.TakeOwnership
+        Else
+            If PDMPart.Owner <> pdmName Then
+                Debug.Print modelnumber(j) & " PART OWNERSHIP NOT AVAILABLE"
+                GoTo nextLoop
+            End If
         End If
-        If PDMDrawing.Owner <> pdmName Then
+        If PDMDrawing.Owner = "" Then
             PDMDrawing.TakeOwnership
+        Else
+            If PDMDrawing.Owner <> pdmName Then
+                Debug.Print modelnumber(j) & " DRAWING OWNERSHIP NOT AVAILABLE"
+                GoTo nextLoop
+            End If
         End If
     End If
 
     'save the model and drawing retrived from PDM into the temp directory'
+    swApp.QuitDoc drawingName
+    swApp.QuitDoc modelName
     PDMDrawing.Save (tempDir)
     PDMPart.Save (tempDir)
 
@@ -175,8 +198,9 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'the line in the existing input file
     Debug.Print modelnumber(j) + " FINISHED"
 
-'loop back to the next model number that was read from the input file'
-Next j
+'loop back to the next model number that was read from the input file the
+'GOTO to eject from the loop points here.
+nextLoop: Next j
 
 'cleanup by logging out of pdm. the vendor files script saves over the
 'files left in temp and then deletes them, but this is kind of a shoddy way
