@@ -38,7 +38,7 @@ Const pdmServer     As String = "SHOXS1"
 
 'set this constant to TRUE to enable test mode, where nothing will be checked in
 'and vendor files won't be saved. Also won't close items after modification
-Const testMode      As Boolean = TRUE
+Const testMode      As Boolean = True
 
 'Custom property values to be written to each file'
 CP_Finish = "002"
@@ -71,7 +71,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'if the initatior of the PDM connection is not already the owner of the'
     'part and drawing document, take ownership here. Should put a test here'
     'to ensure availability of the ownership. need to check for test mode'
-    If testMode = FALSE then
+    If testMode = False Then
         If PDMPart.Owner <> pdmName Then
             PDMPart.TakeOwnership
         End If
@@ -134,7 +134,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     bool = swDrawing.Save3(17, errors, warnings)
 
     'only quit, checkin and issue vendor files if not in test mode'
-    If testMode = FALSE Then
+    If testMode = False Then
         'close both the drawing and the part. they must be closed for the check in
         'function to work correctly
         swApp.QuitDoc swDrawing.GetTitle
@@ -168,7 +168,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         'save the vendor files for the model and drawing by calling the vendor
         'files function. This gets passed only the number and pdmconnection, and
         'checks the drawing and model out fresh to ensure accuracy
-        errors = saveVendorFiles(modelnumber(j),PDMConnection)
+        errors = saveVendorFiles(modelnumber(j), PDMConnection)
     End If
 
     'the work has succeded at this point. should write to a file here or delete
