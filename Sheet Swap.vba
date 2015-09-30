@@ -39,7 +39,7 @@ Const pdmServer     As String = "SHOXS1"
 
 'set this constant to TRUE to enable test mode, where nothing will be checked in
 'and vendor files won't be saved. Also won't close items after modification
-Const testMode      As Boolean = True
+Const testMode      As Boolean = False
 
 'Custom property values to be written to each file'
 CP_Finish = "002"
@@ -86,7 +86,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'part and drawing document, take ownership here.
     'tests for test mode, and ownership availabiltiy. if unavailable, skips to
     'next loop
-    If testMode = True Then
+    If testMode = False Then
         If PDMPart.Owner = "" Then
             PDMPart.TakeOwnership
         Else
@@ -162,13 +162,12 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'work on the drawing is finished. save it in the temp directory'
     bool = swDrawing.Save3(17, errors, warnings)
 
-    'close both the drawing and the part. they must be closed for the check in
-    'function to work correctly
-    swApp.QuitDoc swDrawing.GetTitle
-    swApp.QuitDoc swPart.GetTitle
-
     'only quit, checkin and issue vendor files if not in test mode'
     If testMode = False Then
+        'close both the drawing and the part. they must be closed for the check in
+        'function to work correctly
+        swApp.QuitDoc swDrawing.GetTitle
+        swApp.QuitDoc swPart.GetTitle
 
         'check in both the drawing and the part document to pdm. these calls are
         'currently set to up the revision level, but they don't have to
@@ -201,16 +200,6 @@ For j = LBound(modelnumber) To UBound(modelnumber)
         errors = saveVendorFiles(modelnumber(j), PDMConnection)
     End If
 
-    'in test mode, want to examine the drawing
-    If testMode = True Then
-        Set swDrawing = swApp.OpenDoc6(tempDir + drawingName, _
-            swDocDRAWING, _
-            swOpenDocOptions_Silent, _
-            "", _
-            errors, _
-            warnings)
-    End If
-
     'the work has succeded at this point. should write to a file here or delete
     'the line in the existing input file
     Debug.Print modelnumber(j) + " FINISHED"
@@ -225,6 +214,7 @@ nextLoop: Next j
 'to clean up the files in each loop...'
 PDMConnection.Logout
 Close #2
+Debug.Print "DONE"
 
 End Sub
 '------------------------------------------------------------------------------'
@@ -348,7 +338,7 @@ For i = LBound(vSheetName) To UBound(vSheetName)
 
     'the sheets have been set up to have their templates changed now first,
     'we do the switch for sheets named "CUT"
-    regEx.Pattern = "CUT"
+    regEx.Pattern = "^CUT$"
     If regEx.test(vSheetName(i)) Then
         'clear the sheet template'
         bool = swDrawing.SetupSheet5(vSheetName(i), _
@@ -424,6 +414,8 @@ If swDrawing.ActivateSheet("CUT") Then
         Set swView = swView.GetNextView
     Wend
 End If
+
+bool = swModel.EditRebuild3
 
 End Sub
 '------------------------------------------------------------------------------'
