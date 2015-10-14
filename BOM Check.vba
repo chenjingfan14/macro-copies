@@ -3,7 +3,6 @@ Option Explicit
 Dim swApp               As SldWorks.SldWorks
 Dim CN                  As ADODB.Connection
 
-Dim ActiveConfigname    As String
 Dim regEx               As New RegExp
 
 '------------------------------------------------------------------------------'
@@ -19,6 +18,7 @@ Dim RS                  As ADODB.Recordset
 Dim Field               As ADODB.Field
 Dim regexpmatches       As MatchCollection
 
+Dim ActiveConfigname    As String
 Dim failmatches()       As String
 Dim Failstring          As String
 Dim match               As String
@@ -29,7 +29,7 @@ Dim i                   As Integer
 Dim j                   As Integer
 Dim bool                As Boolean
 
-Const BOMTemplate As String = "X:\Engineering\Engineering Resources\SolidWorks Templates\CDG BOM Template\SHOXS BOM R3.sldbomtbt"
+Const BOMTemplate       As String = "X:\Engineering\Engineering Resources\SolidWorks Templates\CDG BOM Template\SHOXS BOM R3.sldbomtbt"
 
 Set swApp = Application.SldWorks
 Set swModel = swApp.ActiveDoc
@@ -48,7 +48,7 @@ End With
 
 fails = 0
 
-bool = Connect("shoxs2", "CDG_NAV2013_Prod")
+bool = NAVConnect()
 
 For i = 1 To swTable.RowCount - 1
 
@@ -66,16 +66,16 @@ For i = 1 To swTable.RowCount - 1
         match = regexpmatches(0).SubMatches(1)
     End If
 
-    Debug.Print match
+    'Debug.Print match
 
     SQL = "SELECT [No_],[CAD Item No_] FROM [CDG_NAV2013_Prod].[dbo].[CDG$Item] WHERE [No_] LIKE '" & match & "%'" & " OR [CAD Item No_] = '" & match & "'"
 
     RS.Open SQL, CN, adOpenStatic, adLockReadOnly, adCmdText
 
     If Not RS.EOF Then
-        Debug.Print RS.Fields(0)
+        'Debug.Print RS.Fields(0)
     Else
-        Debug.Print "----------------NO MATCH-----------------"
+        Debug.Print match
         fails = fails + 1
         ReDim Preserve failmatches(fails)
         failmatches(fails) = match
@@ -85,6 +85,11 @@ For i = 1 To swTable.RowCount - 1
     RS.Close
 
 Next i
+
+CN.Close
+
+swAnn.Select3 False, Nothing
+swModel.EditDelete
 
 If fails = 0 Then
     bool = swApp.SendMsgToUser2("All items match NAV", 2, 2)
@@ -97,32 +102,25 @@ Else
 
 End If
 
-CN.Close
-
-swAnn.Select3 False, Nothing
-
-swModel.EditDelete
-
 End Sub
 '------------------------------------------------------------------------------'
-Function Connect(Server As String, Database As String) As Boolean
+Function NAVConnect() As Boolean
 
     Set CN = New ADODB.Connection
-
     With CN
         ' Create connecting string
         .ConnectionString = "Provider=SQLOLEDB.1;" & _
                             "Integrated Security=SSPI;" & _
-                            "Server=" & Server & ";" & _
-                            "Database=" & Database & ";"
+                            "Server=shoxs2;" & _
+                            "Database=CDG_NAV2013_Prod;"
         ' Open connection
         .Open
     End With
     ' Check connection state
     If CN.State = 0 Then
-        Connect = False
+        NAVConnect = False
     Else
-        Connect = True
+        NAVConnect = True
     End If
 
 End Function

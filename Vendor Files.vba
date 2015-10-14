@@ -1,13 +1,13 @@
 Option Explicit
 Dim swApp As SldWorks.SldWorks
 '------------------------------------------------------------------------------'
-Sub VendorFilesForCurrentDocument()
+Sub saveOpenVendorFiles()
 
 'object declarations
 Dim swModel         As SldWorks.ModelDoc2
 Dim PDMConnection   As IPDMWConnection
 'data declarations
-dim partToSave      as string
+Dim partToSave      As String
 Dim errors          As Long
 
 'set the objects required
@@ -23,14 +23,91 @@ PDMConnection.Login pdmName, pdmLogin, pdmServer
 
 partToSave = Left(swModel.GetTitle, 6)
 swApp.QuitDoc swModel.GetTitle
+
 errors = saveVendorFiles(partToSave, PDMConnection)
 
 PDMConnection.Logout
 
 End Sub
+
 '------------------------------------------------------------------------------'
-Public function saveVendorFiles(partNumber as string, _
-    passedPDMConnection as IPDMWConnection) as Long
+Sub saveListedFiles()
+
+'local object declarations'
+Dim PDMConnection   As IPDMWConnection
+Dim PDMPart         As PDMWDocument
+Dim PDMDrawing      As PDMWDocument
+
+'local data declarations'
+Dim errors          As Long
+Dim drawingName     As String
+Dim modelName       As String
+Dim modelnumber()   As String
+Dim j               As Integer
+
+'local constant declarations'
+Const inputFile     As String = "C:\Users\jpettit\Desktop\SCRIPTS\filesToSave.txt"
+Const outputFile    As String = "C:\Users\jpettit\Desktop\SCRIPTS\fileSaveOutput.txt"
+Const tempDir       As String = "X:\Engineering\TEMP\"
+Const pdmName       As String = "jpettit"
+Const pdmLogin      As String = "CDGshoxs!"
+Const pdmServer     As String = "SHOXS1"
+
+
+'initialize objects and start the PDM connection'
+Set swApp = Application.SldWorks
+Open outputFile For Output As #2
+Set PDMConnection = CreateObject("PDMWorks.PDMWConnection")
+PDMConnection.Login pdmName, pdmLogin, pdmServer
+
+'function call which returns array of part numbers to change'
+'Part numbers are read from an external file'
+modelnumber() = readData(inputFile)
+Debug.Print UBound(modelnumber()) + 1 & " PARTS TO SAVE"
+
+'main part number inspection loop. loops through each part number read from'
+'the external file, opens the part, modifies it, and checks it in'
+For j = LBound(modelnumber) To UBound(modelnumber)
+
+    'set the drawing and model names, and find the PDM objects they represent
+    'if the drawing or part cant be set, they aren't in the vault, and we need
+    'to skip to the next loop
+    drawingName = modelnumber(j) + ".SLDDRW"
+    modelName = modelnumber(j) + ".SLDPRT"
+    Set PDMPart = PDMConnection.GetSpecificDocument(modelName)
+    If PDMPart Is Nothing Then
+        Debug.Print modelnumber(j) & " PART NOT IN VAULT"
+        Print #2, modelnumber(j) & ", PART NOT IN VAULT"
+        GoTo nextLoop
+    End If
+    Set PDMDrawing = PDMConnection.GetSpecificDocument(drawingName)
+    If PDMDrawing Is Nothing Then
+        Debug.Print modelnumber(j) & " DRAWING NOT IN VAULT"
+        Print #2, modelnumber(j) & ", DRAWING NOT IN VAULT"
+        GoTo nextLoop
+    End If
+
+    errors = saveVendorFiles(modelnumber(j), PDMConnection)
+
+    Debug.Print modelnumber(j) + " SAVED"
+    Print #2, modelnumber(j) + ", SAVED"
+
+
+'loop back to the next model number that was read from the input file the
+'GOTO to eject from the loop points here.
+nextLoop: Next j
+
+'cleanup by logging out of pdm. the vendor files script saves over the
+'files left in temp and then deletes them, but this is kind of a shoddy way
+'to clean up the files in each loop...'
+PDMConnection.Logout
+Close #2
+Debug.Print "DONE"
+
+End Sub
+'------------------------------------------------------------------------------'
+Public Function saveVendorFiles(partNumber As String, _
+    passedPDMConnection As IPDMWConnection) As Long
 
 'object declarations
 Dim fso             As Object
@@ -46,7 +123,7 @@ Dim Revision        As String
 Dim saveName        As String
 Dim errors          As Long
 Dim warnings        As Long
-Dim bool      As Boolean
+Dim bool            As Boolean
 
 'vendor files and temp locations on x drive
 Const vendorDir     As String = "X:\Engineering\Vendor Files\"

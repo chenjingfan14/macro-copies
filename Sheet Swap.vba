@@ -204,7 +204,7 @@ For j = LBound(modelnumber) To UBound(modelnumber)
     'the line in the existing input file
     Debug.Print modelnumber(j) + " FINISHED"
     Print #2, modelnumber(j) + ", FINISHED"
-    
+
 'loop back to the next model number that was read from the input file the
 'GOTO to eject from the loop points here.
 nextLoop: Next j
