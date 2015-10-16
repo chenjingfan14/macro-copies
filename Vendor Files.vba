@@ -165,6 +165,9 @@ Set swDrawing = swApp.OpenDoc6(tempDir + drawingName, _
     "", _
     errors, _
     warnings)
+
+swDrawing.ForceRebuild3 True
+
 Set swModelDocExt = swDrawing.Extension
 Set swExportPDFData = swApp.GetExportFileData(1)
 bool = swExportPDFData.SetSheets(swExportData_ExportAllSheets, Nothing)
